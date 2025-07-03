@@ -89,6 +89,9 @@ def show_model_performance():
         st.markdown(f"#### {name}")
         st.dataframe(pd.DataFrame(report).transpose())
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 def get_recommendations(user_article, df, tfidf_vectorizer):
     if 'news' not in df.columns:
         st.error("❌ 'news' column not found.")
@@ -99,25 +102,30 @@ def get_recommendations(user_article, df, tfidf_vectorizer):
     cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
 
     top_indices = cosine_similarities.argsort()[-6:][::-1]  # top 5 + input
-    recommendations = df.iloc[top_indices[1:]]  # skip the input itself
+    recommendations = df.iloc[top_indices[1:]]  # skip input article
     return recommendations
 
 
-# Recommendations
 def show_recommendations():
     df = st.session_state.df
 
+    if 'news' not in df.columns:
+        st.error("❌ Column 'news' not found in the dataset.")
+        return
+
     sample_articles = df.sample(10, random_state=42)
 
-    article_choices = [
-        f"{i+1}. {row['news'][:80]}..." for i, row in sample_articles.iterrows()
-    ]
+    # Build choice label-to-index map
+    article_choices = {
+        f"{i+1}. {row['news'][:80]}...": idx
+        for i, (idx, row) in enumerate(sample_articles.iterrows())
+    }
 
-    selected = st.selectbox("Choose an article:", article_choices)
-    index = int(selected.split(".")[0]) - 1
-    selected_article = sample_articles.iloc[index]['news']
+    selected_label = st.selectbox("Choose an article:", list(article_choices.keys()))
+    selected_idx = article_choices[selected_label]
+    selected_article = df.loc[selected_idx, 'news']
 
-    st.subheader("You selected:")
+    st.subheader("📝 You selected:")
     st.write(selected_article)
 
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
