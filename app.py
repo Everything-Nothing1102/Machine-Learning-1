@@ -25,8 +25,8 @@ def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
         df = pd.read_csv(url, encoding='ISO-8859-1')
-        df.columns = df.columns.str.strip().str.replace('\ufeff', '')  # Clean headers
-        st.write("📄 COLUMN HEADERS:", df.columns.tolist())  # <--- Show actual columns
+        df.columns = df.columns.str.strip().str.replace('\ufeff', '').str.lower()  # normalize
+        st.write("📄 Columns in dataset:", df.columns.tolist())
         st.session_state.df = df
         st.session_state.data_loaded = True
         st.success("✅ Dataset loaded successfully!")
@@ -45,8 +45,8 @@ def train_models():
         return
 
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['Text'])
-    y = df['Category']
+    X = tfidf.fit_transform(df['text'])
+    y = df['category']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
