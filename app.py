@@ -89,8 +89,28 @@ def show_model_performance():
         st.markdown(f"#### {name}")
         st.dataframe(pd.DataFrame(report).transpose())
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+    
+    
+    st.subheader("📊 Model Comparison: Precision, Recall & F1-Score")
+
+    logreg_df = pd.DataFrame(st.session_state.models['Logistic Regression']).transpose()
+    knn_df = pd.DataFrame(st.session_state.models['K-Nearest Neighbors']).transpose()
+
+    label_rows = logreg_df.index.difference(['accuracy', 'macro avg', 'weighted avg'])
+    metrics = ['precision', 'recall', 'f1-score']
+
+    for metric in metrics:
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.bar(label_rows, logreg_df.loc[label_rows, metric], alpha=0.6, label='Logistic Regression')
+        ax.bar(label_rows, knn_df.loc[label_rows, metric], alpha=0.6, label='KNN', bottom=logreg_df.loc[label_rows, metric] * 0)
+        ax.set_title(f'{metric.capitalize()} Comparison by Class')
+        ax.set_ylabel(metric.capitalize())
+        ax.set_xlabel("Class")
+        ax.legend()
+        ax.set_ylim(0, 1.05)
+        plt.xticks(rotation=45)
+        st.pyplot(fig)
+
 
 def get_recommendations(user_article, df, tfidf_vectorizer, top_n=7):
     tfidf_matrix = tfidf_vectorizer.fit_transform(df['news'])
