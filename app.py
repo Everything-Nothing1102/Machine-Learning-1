@@ -76,7 +76,7 @@ def show_dataset_overview():
     st.dataframe(df.head())
     st.subheader("🗂️ Category Distribution")
     fig, ax = plt.subplots()
-    sns.countplot(data=df, y='Category', order=df['Category'].value_counts().index, ax=ax)
+    sns.countplot(data=df, y='type', order=df['type'].value_counts().index, ax=ax)
     st.pyplot(fig)
 
 # Model performance
@@ -97,7 +97,7 @@ def show_recommendations():
     df = st.session_state.df
     st.subheader("🧠 Personalized News Recommendations")
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['Text'])
+    X = tfidf.fit_transform(df['news'])
     st.markdown("**Select one or more articles you like:**")
     sample_articles = df.sample(10).reset_index(drop=True)
     article_choices = [f"{i+1}. {row['Text'][:80]}..." for i, row in sample_articles.iterrows()]
