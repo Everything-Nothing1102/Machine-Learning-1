@@ -21,14 +21,15 @@ for key in ['data_loaded', 'models_trained', 'df', 'models']:
         st.session_state[key] = False if 'loaded' in key or 'trained' in key else None if key == 'df' else {}
 
 # Load datasetdef load_dataset():
+
 def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
-        df = pd.read_csv(url, encoding='ISO-8859-1')
-        df.columns = df.columns.str.strip()  
+        df = pd.read_csv(url, encoding='ISO-8859-1', header=0)
+        df.columns = df.columns.str.strip()
+        st.write("✅ Columns in dataset:", df.columns.tolist())  # DEBUG LINE
         st.session_state.df = df
         st.session_state.data_loaded = True
-        st.write("✅ Dataset loaded. Columns:", df.columns.tolist())  
         st.success("✅ Dataset loaded successfully!")
     except Exception as e:
         st.error(f"❌ Failed to load dataset: {e}")
