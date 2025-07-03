@@ -24,7 +24,7 @@ for key in ['data_loaded', 'models_trained', 'df', 'models']:
 def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
-        df = pd.read_csv(url)
+        df = pd.read_csv(url, encoding='ISO-8859-1')  
         st.session_state.df = df
         st.session_state.data_loaded = True
         st.success("✅ Dataset loaded successfully!")
