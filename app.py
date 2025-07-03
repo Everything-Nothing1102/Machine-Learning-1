@@ -38,7 +38,7 @@ def load_dataset():
 def train_models():
     df = st.session_state.df
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['Text'])
+    X = tfidf.fit_transform(df['text'])
     y = df['Category']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
