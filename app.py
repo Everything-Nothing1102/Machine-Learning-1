@@ -25,7 +25,7 @@ def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
         df = pd.read_csv(url, encoding='ISO-8859-1')
-        df.columns = df.columns.str.strip().str.replace('\ufeff', '').str.lower()  # normalize
+        df.columns = df.columns.str.strip().str.replace('\ufeff', '').str.lower()  
         st.write("📄 Columns in dataset:", df.columns.tolist())
         st.session_state.df = df
         st.session_state.data_loaded = True
@@ -44,8 +44,8 @@ def train_models():
         return
 
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['news'])   # ✅ changed from 'Text'
-    y = df['type']                        # ✅ changed from 'Category'
+    X = tfidf.fit_transform(df['news'])   
+    y = df['type']                        
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -97,8 +97,8 @@ def get_recommendations(user_article, df, tfidf_vectorizer, top_n=7):
     user_vec = tfidf_vectorizer.transform([user_article])
     cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
 
-    top_indices = cosine_similarities.argsort()[-(top_n + 1):][::-1]  # top_n + the article itself
-    return df.iloc[top_indices[1:]]  # skip the original article
+    top_indices = cosine_similarities.argsort()[-(top_n + 1):][::-1]  
+    return df.iloc[top_indices[1:]]  
 
 
 def show_recommendations():
@@ -108,7 +108,7 @@ def show_recommendations():
         st.error("❌ Required columns ('news', 'type') not found.")
         return
 
-    # ✅ List up to 10 categories (or all)
+    
     all_categories = sorted(df['type'].unique())
     category = st.selectbox("🗂️ Choose a news category:", all_categories[:10])
 
@@ -118,7 +118,7 @@ def show_recommendations():
         st.warning("⚠️ No articles available in this category.")
         return
 
-    # ✅ Show all articles in the selected category
+    
     article_choices = {
         f"{i+1}. {row['news'][:80]}...": idx
         for i, (idx, row) in enumerate(filtered_df.iterrows())
@@ -131,7 +131,7 @@ def show_recommendations():
     st.subheader("📝 You selected:")
     st.write(selected_article)
 
-    # ✅ Get and display 7 similar articles from entire dataset
+
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
     recommendations = get_recommendations(selected_article, df, tfidf, top_n=7)
 
