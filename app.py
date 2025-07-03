@@ -20,22 +20,25 @@ for key in ['data_loaded', 'models_trained', 'df', 'models']:
     if key not in st.session_state:
         st.session_state[key] = False if 'loaded' in key or 'trained' in key else None if key == 'df' else {}
 
-# Load dataset
+# Load datasetdef load_dataset():
 def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
-        df = pd.read_csv(url, encoding='ISO-8859-1')  
+        df = pd.read_csv(url, encoding='ISO-8859-1')
+        df.columns = df.columns.str.strip()  
         st.session_state.df = df
         st.session_state.data_loaded = True
+        st.write("✅ Dataset loaded. Columns:", df.columns.tolist())  
         st.success("✅ Dataset loaded successfully!")
     except Exception as e:
         st.error(f"❌ Failed to load dataset: {e}")
+
 
 # Train models
 def train_models():
     df = st.session_state.df
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['text'])
+    X = tfidf.fit_transform(df['Text'])
     y = df['Category']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
