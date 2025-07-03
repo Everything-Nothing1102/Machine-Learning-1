@@ -89,14 +89,16 @@ def show_model_performance():
         st.markdown(f"#### {name}")
         st.dataframe(pd.DataFrame(report).transpose())
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-def get_recommendations(user_article, df, tfidf_vectorizer):
+def get_recommendations(user_article, df, tfidf_vectorizer, top_n=7):
     tfidf_matrix = tfidf_vectorizer.fit_transform(df['news'])
     user_vec = tfidf_vectorizer.transform([user_article])
     cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
 
-    top_indices = cosine_similarities.argsort()[-6:][::-1]  # Top 5 + original
-    return df.iloc[top_indices[1:]]  # Skip the selected article itself
+    top_indices = cosine_similarities.argsort()[-(top_n + 1):][::-1]  # top_n + the article itself
+    return df.iloc[top_indices[1:]]  # skip the original article
 
 
 def show_recommendations():
@@ -106,34 +108,37 @@ def show_recommendations():
         st.error("❌ Required columns ('news', 'type') not found.")
         return
 
-    # ✅ Step 1: Choose a category
-    category = st.selectbox("Choose a news category:", sorted(df['type'].unique()))
+    # ✅ List up to 10 categories (or all)
+    all_categories = sorted(df['type'].unique())
+    category = st.selectbox("🗂️ Choose a news category:", all_categories[:10])
+
     filtered_df = df[df['type'] == category]
 
     if filtered_df.empty:
         st.warning("⚠️ No articles available in this category.")
         return
 
-    # ✅ Step 2: Select an article from that category
+    # ✅ Show all articles in the selected category
     article_choices = {
         f"{i+1}. {row['news'][:80]}...": idx
         for i, (idx, row) in enumerate(filtered_df.iterrows())
     }
 
-    selected_label = st.selectbox("Choose an article from the category:", list(article_choices.keys()))
+    selected_label = st.selectbox("📰 Choose an article:", list(article_choices.keys()))
     selected_idx = article_choices[selected_label]
     selected_article = filtered_df.loc[selected_idx, 'news']
 
     st.subheader("📝 You selected:")
     st.write(selected_article)
 
-    # ✅ Step 3: Generate and display recommendations from full dataset
+    # ✅ Get and display 7 similar articles from entire dataset
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    recommendations = get_recommendations(selected_article, df, tfidf)
+    recommendations = get_recommendations(selected_article, df, tfidf, top_n=7)
 
     st.subheader("🔁 You may also like:")
     for i, rec in enumerate(recommendations['news']):
         st.markdown(f"**{i+1}.** {rec[:250]}...")
+
 
 # Home
 def show_home():
