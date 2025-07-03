@@ -89,38 +89,43 @@ def show_model_performance():
         st.markdown(f"#### {name}")
         st.dataframe(pd.DataFrame(report).transpose())
 
+def get_recommendations(user_article, df, tfidf_vectorizer):
+    if 'news' not in df.columns:
+        st.error("❌ 'news' column not found.")
+        return []
+
+    tfidf_matrix = tfidf_vectorizer.fit_transform(df['news'])
+    user_vec = tfidf_vectorizer.transform([user_article])
+    cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
+
+    top_indices = cosine_similarities.argsort()[-6:][::-1]  # top 5 + input
+    recommendations = df.iloc[top_indices[1:]]  # skip the input itself
+    return recommendations
+
+
 # Recommendations
 def show_recommendations():
-    if not st.session_state.data_loaded:
-        st.warning("Load the dataset first.")
-        return
     df = st.session_state.df
-    st.subheader("🧠 Personalized News Recommendations")
+
+    sample_articles = df.sample(10, random_state=42)
+
+    article_choices = [
+        f"{i+1}. {row['news'][:80]}..." for i, row in sample_articles.iterrows()
+    ]
+
+    selected = st.selectbox("Choose an article:", article_choices)
+    index = int(selected.split(".")[0]) - 1
+    selected_article = sample_articles.iloc[index]['news']
+
+    st.subheader("You selected:")
+    st.write(selected_article)
+
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['news'])
-    st.markdown("**Select one or more articles you like:**")
-    sample_articles = df.sample(10).reset_index(drop=True)
-    article_choices = [f"{i+1}. {row['news'][:80]}..." for i, row in sample_articles.iterrows()]
-    selected = st.multiselect("Articles:", article_choices)
-    if selected:
-        selected_indices = [int(s.split('.')[0]) - 1 for s in selected]
-        selected_vectors = X[sample_articles.iloc[selected_indices].index]
-        similarity_scores = cosine_similarity(selected_vectors, X).mean(axis=0)
-        top_indices = similarity_scores.argsort()[::-1]
-        shown = set(sample_articles.iloc[selected_indices].index)
-        recommendations = []
-        for idx in top_indices:
-            if idx not in shown:
-                recommendations.append((idx, similarity_scores[idx]))
-            if len(recommendations) >= 5:
-                break
-        st.markdown("### 🔍 Top Recommended Articles:")
-        for idx, score in recommendations:
-            st.markdown(f"**Score: {score:.2f}** — *{df.iloc[idx]['Category'].capitalize()}*")
-            st.write(df.iloc[idx]['Text'])
-            st.markdown("---")
-    else:
-        st.info("Select a few articles to receive personalized recommendations.")
+    recommendations = get_recommendations(selected_article, df, tfidf)
+
+    st.subheader("🔁 You may also like:")
+    for rec in recommendations['news']:
+        st.markdown(f"- {rec[:100]}...")
 
 # Home
 def show_home():
