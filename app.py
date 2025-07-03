@@ -38,15 +38,14 @@ def load_dataset():
 def train_models():
     df = st.session_state.df
 
-    # Safety check for column
-    if 'Text' not in df.columns:
-        st.error("❌ Column 'Text' not found in dataset.")
-        st.write("📄 Columns available:", df.columns.tolist())
+    if 'news' not in df.columns or 'type' not in df.columns:
+        st.error("❌ Required columns 'news' and 'type' not found.")
+        st.write("📄 Available columns:", df.columns.tolist())
         return
 
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['text'])
-    y = df['category']
+    X = tfidf.fit_transform(df['news'])   # ✅ changed from 'Text'
+    y = df['type']                        # ✅ changed from 'Category'
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
