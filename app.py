@@ -35,17 +35,19 @@ def load_dataset():
 
 
 # Train models
- def train_models():
+def train_models():
     df = st.session_state.df
-    st.write("✅ Available columns:", df.columns.tolist())  # TEMP DEBUG
-    tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
+
+    # Safety check for column
     if 'Text' not in df.columns:
-    st.error("❌ Column 'Text' not found in dataset.")
-    st.write("Columns found:", df.columns.tolist())
-    return
-    X = tfidf.fit_transform(df['Text'])  # Now safe
-    y = df['Category']                   # Capital C
-    
+        st.error("❌ Column 'Text' not found in dataset.")
+        st.write("📄 Columns available:", df.columns.tolist())
+        return
+
+    tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
+    X = tfidf.fit_transform(df['Text'])
+    y = df['Category']
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     logreg = LogisticRegression(max_iter=1000)
