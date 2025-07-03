@@ -24,9 +24,10 @@ for key in ['data_loaded', 'models_trained', 'df', 'models']:
 def load_dataset():
     url = "https://raw.githubusercontent.com/suraj-deshmukh/BBC-Dataset-News-Classification/master/dataset/dataset.csv"
     try:
-        df = pd.read_csv(url, encoding='ISO-8859-1')  # or 'latin1'
-        df.columns = df.columns.str.strip()  # Remove extra spaces or BOMs
-        st.write("📄 Columns loaded:", df.columns.tolist())  # Debug line
+        df = pd.read_csv(url, encoding='ISO-8859-1')
+        df.columns = df.columns.str.strip()           # remove leading/trailing spaces
+        df.columns = df.columns.str.replace('\ufeff', '')  # remove BOM if present
+        st.write("📄 Columns loaded:", df.columns.tolist())  # <-- shows actual columns
         st.session_state.df = df
         st.session_state.data_loaded = True
         st.success("✅ Dataset loaded successfully!")
@@ -35,10 +36,11 @@ def load_dataset():
 
 
 # Train models
-def train_models():
+ def train_models():
     df = st.session_state.df
+    st.write("✅ Available columns:", df.columns.tolist())  # TEMP DEBUG
     tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-    X = tfidf.fit_transform(df['Text'])  
+    X = tfidf.fit_transform(df['Text'])  # will now work if column is present
     y = df['Category']                   # Capital C
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
