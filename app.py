@@ -108,24 +108,56 @@ def show_recommendations():
         st.error("❌ Required columns ('news', 'type') not found.")
         return
 
-    st.subheader("📝 Enter your news interest or custom query:")
-    user_input = st.text_area("🔍 Type something like 'latest politics in UK' or 'technology trends'")
+    st.subheader("🔍 Choose Recommendation Mode")
+    mode = st.radio("How would you like to get recommendations?", ["By Category & Article", "By Custom Query"])
 
-    if user_input.strip():
-        tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
-        tfidf_matrix = tfidf.fit_transform(df['news'])
-        user_vec = tfidf.transform([user_input])
-        cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
+    tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
 
-        top_indices = cosine_similarities.argsort()[::-1][:7]
-        top_scores = cosine_similarities[top_indices]
+    if mode == "By Category & Article":
+        all_categories = sorted(df['type'].unique())
+        category = st.selectbox("🗂️ Choose a news category:", all_categories)
 
-        st.subheader("🔁 Top Matches Based on Your Input:")
-        for i, idx in enumerate(top_indices):
-            score_percent = round(top_scores[i] * 100, 2)
-            st.markdown(f"**{i+1}. ({score_percent}% match)** {df.iloc[idx]['news'][:250]}...")
-    else:
-        st.info("⌨️ Enter a query above to get personalized article suggestions.")
+        filtered_df = df[df['type'] == category]
+
+        if filtered_df.empty:
+            st.warning("⚠️ No articles available in this category.")
+            return
+
+        article_choices = {
+            f"{i+1}. {row['news'][:80]}...": idx
+            for i, (idx, row) in enumerate(filtered_df.iterrows())
+        }
+
+        selected_label = st.selectbox("📰 Choose an article:", list(article_choices.keys()))
+        selected_idx = article_choices[selected_label]
+        selected_article = filtered_df.loc[selected_idx, 'news']
+
+        st.subheader("📝 You selected:")
+        st.write(selected_article)
+
+        recommendations = get_recommendations(selected_article, df, tfidf, top_n=7)
+
+        st.subheader("🔁 You may also like:")
+        for i, rec in enumerate(recommendations['news']):
+            st.markdown(f"**{i+1}.** {rec[:250]}...")
+
+    elif mode == "By Custom Query":
+        user_input = st.text_area("📝 Enter your news interest or custom query:")
+
+        if user_input.strip():
+            tfidf_matrix = tfidf.fit_transform(df['news'])
+            user_vec = tfidf.transform([user_input])
+            cosine_similarities = cosine_similarity(user_vec, tfidf_matrix).flatten()
+
+            top_indices = cosine_similarities.argsort()[::-1][:7]
+            top_scores = cosine_similarities[top_indices]
+
+            st.subheader("🔁 Top Matches Based on Your Input:")
+            for i, idx in enumerate(top_indices):
+                score_percent = round(top_scores[i] * 100, 2)
+                st.markdown(f"**{i+1}. ({score_percent}% match)** {df.iloc[idx]['news'][:250]}...")
+        else:
+            st.info("⌨️ Enter a query above to get personalized article suggestions.")
 
 
 # Home
