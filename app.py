@@ -91,25 +91,18 @@ def show_model_performance():
 
     
     
-    st.subheader("📊 Model Comparison: Precision, Recall & F1-Score")
+    st.subheader("✅ Overall Accuracy Comparison")
 
-    logreg_df = pd.DataFrame(st.session_state.models['Logistic Regression']).transpose()
-    knn_df = pd.DataFrame(st.session_state.models['K-Nearest Neighbors']).transpose()
+    accuracy_logreg = logreg_df.loc['accuracy']['precision']  
+    accuracy_knn = knn_df.loc['accuracy']['precision']
 
-    label_rows = logreg_df.index.difference(['accuracy', 'macro avg', 'weighted avg'])
-    metrics = ['precision', 'recall', 'f1-score']
+    fig, ax = plt.subplots()
+    ax.bar(['Logistic Regression', 'K-Nearest Neighbors'], [accuracy_logreg, accuracy_knn], color=['#1f77b4', '#ff7f0e'])
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Accuracy")
+    ax.set_title("Overall Accuracy Comparison")
+    st.pyplot(fig)
 
-    for metric in metrics:
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.bar(label_rows, logreg_df.loc[label_rows, metric], alpha=0.6, label='Logistic Regression')
-        ax.bar(label_rows, knn_df.loc[label_rows, metric], alpha=0.6, label='KNN', bottom=logreg_df.loc[label_rows, metric] * 0)
-        ax.set_title(f'{metric.capitalize()} Comparison by Class')
-        ax.set_ylabel(metric.capitalize())
-        ax.set_xlabel("Class")
-        ax.legend()
-        ax.set_ylim(0, 1.05)
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
 
 
 def get_recommendations(user_article, df, tfidf_vectorizer, top_n=7):
