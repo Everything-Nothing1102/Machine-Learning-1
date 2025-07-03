@@ -100,7 +100,7 @@ def show_recommendations():
     X = tfidf.fit_transform(df['news'])
     st.markdown("**Select one or more articles you like:**")
     sample_articles = df.sample(10).reset_index(drop=True)
-    article_choices = [f"{i+1}. {row['Text'][:80]}..." for i, row in sample_articles.iterrows()]
+    article_choices = [f"{i+1}. {row['news'][:80]}..." for i, row in sample_articles.iterrows()]
     selected = st.multiselect("Articles:", article_choices)
     if selected:
         selected_indices = [int(s.split('.')[0]) - 1 for s in selected]
